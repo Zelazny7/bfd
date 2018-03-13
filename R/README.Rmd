@@ -1,0 +1,52 @@
+---
+title: "README"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(bfd)
+```
+
+## Big Frame o' Data
+
+`bfd` is a small project that aims to handle big data. Big for memory, not for hard drives. It is mostly a learning
+exercise but it may turn into something more useful. The `fst` package will hopefully fill the vacuum of R
+packages that can chunk over on-disk data, but until then `bfd` is no big deal.
+
+## Classes
+
+`bfd` has a set of reference classes that handle writing and reading vectors of all R's base types. These are
+created using the `make_bfdcol` generic function:
+
+```{r}
+data(iris)
+
+unlink("iris.bin", TRUE, TRUE)
+
+dir.create("iris.bin")
+cols <- mapply(make_bfdcol, iris, names(iris), MoreArgs = list(path="iris.bin", write=TRUE))
+```
+
+The preceding code is a little inconvenient but a function to create a `bfd` from a `data.frame` is in the works.
+It returns a list of `bfdcols` which contain the following information:
+
+```{r}
+cols[[1]]
+```
+
+## Reading from a `bfd`
+
+Because the `bfdcol`s keep a reference to the binary file location, reading data back into R requires no further
+arguments. Wrapping it in a `data.frame` produces the original dataset:
+
+```{r}
+d <- data.frame(lapply(cols, function(x) x$read()))
+
+head(d)
+
+all.equal(d, iris)
+
+```
+
+

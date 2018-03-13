@@ -1,0 +1,11 @@
+Package: bfd
+Type: Package
+Title: Big Frame of Data
+Version: 0.0.0
+Author: Eric Graves
+Maintainer: Eric Graves <gravcon5@gmail.com>
+Description: Store data frames in columnar binary files and access
+    them transparently.
+License: MIT
+Encoding: UTF-8
+LazyData: true

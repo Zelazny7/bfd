@@ -20,33 +20,35 @@ packages that can chunk over on-disk data, but until then `bfd` is no big deal.
 created using the `make_bfdcol` generic function:
 
 ```{r}
+library(bfd)
+
 data(iris)
+df <- bfd(iris, path = "iris.bin", overwrite = TRUE)
 
-unlink("iris.bin", TRUE, TRUE)
+df
 
-dir.create("iris.bin")
-cols <- mapply(make_bfdcol, iris, names(iris), MoreArgs = list(path="iris.bin", write=TRUE))
 ```
 
-The preceding code is a little inconvenient but a function to create a `bfd` from a `data.frame` is in the works.
-It returns a list of `bfdcols` which contain the following information:
+## Indexing operation
 
 ```{r}
-cols[[1]]
+df$Species[1:10]
+
+head(df)
+tail(df)
+
+df[1:10, c(1,4)]
 ```
 
-## Reading from a `bfd`
 
-Because the `bfdcol`s keep a reference to the binary file location, reading data back into R requires no further
-arguments. Wrapping it in a `data.frame` produces the original dataset:
+## Combining bfds
+
+These functions will eventually be called from `rbind` and `cbind` equivalents:
 
 ```{r}
-d <- data.frame(lapply(cols, function(x) x$read()))
 
-head(d)
+df <- combine.bfds(df, df)
 
-all.equal(d, iris)
+df
 
 ```
-
-

@@ -47,7 +47,7 @@ These functions will eventually be called from `rbind` and `cbind` equivalents:
 
 ```{r}
 
-df <- combine.bfds(df, df)
+df <- append.bfd(df, iris)
 
 df
 

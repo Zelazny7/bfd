@@ -152,6 +152,7 @@ print.bfd <- function(x, ...) {
 
 ## need to be able to append a data.frame to a bfd
 
+#' @export
 append.bfd <- function(x, y) {
   
   ## check that they are all the same

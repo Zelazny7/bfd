@@ -16,17 +16,24 @@ bfdcol <- setRefClass(
     },
 
     write  = function(x) Write(.self, x),
-    read   = function(i) Read(.self, i),
+    read   = function(i) {
+      if (missing(i)) i <- seq.int(n)
+      Read(.self, i)
+    },
     append = function(x) Append(.self, x)
   )
 )
 
+#' @export
 setGeneric("Read", def = function(col, i) standardGeneric("Read"))
+
+#' @export
 setGeneric("Write", def = function(col, x) standardGeneric("Write"))
+
+#' @export
 setGeneric("Append", def = function(col, x) standardGeneric("Append"))
 
-setMethod("Read", c("bfdcol", "missing"), function(col, i) Read(col, seq.int(col$n)))
-
+#' @export
 setMethod(
   "Read",
   c("bfdcol", "numeric"),
@@ -51,6 +58,7 @@ setMethod(
     return(unlist(out, use.names = FALSE))
   })
 
+#' @export
 setMethod(
   "Write",
   c("bfdcol", "ANY"),
@@ -61,6 +69,7 @@ setMethod(
     col$n <- length(x)
   })
 
+#' @export
 setMethod(
   "Append",
   c("bfdcol", "ANY"),
@@ -88,7 +97,7 @@ bfdcol_factor <- setRefClass("bfdcol_factor",
                              contains="bfdcol")
 
 ###### FACTOR COLUMN METHODS ######
-
+#' @export
 setMethod(
   "Write",
   c("bfdcol_factor", "factor"),
@@ -96,6 +105,7 @@ setMethod(
     Write(col, as.integer(x))
   })
 
+#' @export
 setMethod(
   "Read",
   c("bfdcol_factor", "numeric"),
@@ -103,6 +113,7 @@ setMethod(
     factor(callNextMethod(), levels=col$levels, labels=col$labels)
   })
 
+#' @export
 setMethod(
   "Append",
   c("bfdcol_factor", "factor"),
@@ -111,6 +122,7 @@ setMethod(
     col$labels <- union(col$labels, levels(x))
     Append(col, match(x, col$labels))
   })
+
 
 setGeneric("make_bfdcol", function(x, name, path, write=FALSE) standardGeneric("make_bfdcol"))
 

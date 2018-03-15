@@ -80,7 +80,7 @@ Combining bfds
 These functions will eventually be called from `rbind` and `cbind`
 equivalents:
 
-    df <- combine.bfds(df, df)
+    df <- append.bfd(df, iris)
 
     df
 

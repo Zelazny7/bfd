@@ -12,15 +12,11 @@ bfd <- function(df, path, overwrite=FALSE, write=TRUE) {
   }
 
   dir.create(path)
-  #out <- new("bfd", path=path)
 
-  value <- mapply(make_bfdcol, df, names(df), MoreArgs = list(path=path, write=TRUE), SIMPLIFY = FALSE)
+  value <- mapply(make_bfdcol, df, names(df), MoreArgs = list(path=path, write=write), SIMPLIFY = FALSE)
   attr(value, "class") <- "bfd"
   attr(value, "path") <- path
-
-  ## save meta-data in the bin folder as well ... figure this out...
-  # saveRDS(value, file = file.path(path, "metadata.rds"))
-
+  
   value
 }
 
@@ -43,7 +39,10 @@ summary.bfd <- function(object, ...) {
 ## implement a head function
 
 #' @export
-dim.bfd <- function(x) as.integer(c(x[[1]]$n, length(x)))
+dim.bfd <- function(x) {
+  nr <- x[[1]]$n
+  as.integer(c(nr, length(x)))
+}
 
 #' @export
 `[.bfd` <- function(x, i, j) {
@@ -151,45 +150,14 @@ print.bfd <- function(x, ...) {
   x
 }
 
+## need to be able to append a data.frame to a bfd
 
-### Append two bfds
-#' @export
-combine.bfds <- function(a, b, margin=1L) {
-
-  ## row-wise append
-  if (identical(margin, 1L)) {
-    ## check that columns are the same and in the same order
-    stopifnot(identical(names(a), names(b)))
-
-    ## append values from b into a
-
-    for (i in seq_along(a)) {
-
-      col <- a[[i]]
-
-      ## check if a factor column
-      if (is(a, "bfdcol_factor")) {
-
-        to_append <- b[[i]]$read()
-
-        ## get union of levels and labels
-        a$levels <- union(a$levels, b$levels)
-        a$labels <- union(a$labels, b$labels)
-
-        to_append <- factor(match(to_append, a$labels), levels = a$levels, labels = a$labels)
-
-        a[[i]]$append(to_append)
-
-      } else {
-        a[[i]]$append(b[[i]]$read())
-      }
-    }
-
-
-    ## update the dimensions of a and return
-    attr(a, "dims") <- as.integer(c(a[[1]]$n, length(a)))
-    return(a)
-  }
+append.bfd <- function(x, y) {
+  
+  ## check that they are all the same
+  stopifnot(identical(names(x), names(y)))
+  
+  for (i in seq_along(x)) x[[i]]$append(y[[i]])
+  
+  x
 }
-
-

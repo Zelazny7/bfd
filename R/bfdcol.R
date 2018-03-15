@@ -1,5 +1,4 @@
 ### get sizes of binary types
-
 bfdcol <- setRefClass(
   "bfdcol",
   fields = list(
@@ -11,48 +10,107 @@ bfdcol <- setRefClass(
   ),
 
   methods = list(
-
-    write = function(x) {
-      on.exit(close.connection(con))
-
-      con <- file(file, open = "wb")
-      writeBin(x, con, size)
-
-      n <<- length(x)
+    initialize = function(...) {
+      n <<- 0
+      callSuper(...)
     },
 
-    read = function(i) {
-      on.exit(close.connection(con))
+    write  = function(x) Write(.self, x),
+    read   = function(i) Read(.self, i),
+    append = function(x) Append(.self, x)
+  )
+)
 
-      if (missing(i)) i <- seq.int(n)
+setGeneric("Read", def = function(col, i) standardGeneric("Read"))
+setGeneric("Write", def = function(col, x) standardGeneric("Write"))
+setGeneric("Append", def = function(col, x) standardGeneric("Append"))
 
-      ### TODO:: replace this with seek?
+setMethod("Read", c("bfdcol", "missing"), function(col, i) Read(col, seq.int(col$n)))
 
-      con <- file(file, open = "rb")
-      out <- readBin(con, what = what, n = n)
-      out[i]
-    },
-
-    append = function(x) {
-      on.exit(close.connection(con))
-      con <- file(file, open = "ab")
-      writeBin(x, con, size)
-      n <<- n + length(x)
+setMethod(
+  "Read",
+  c("bfdcol", "numeric"),
+  function(col, i) {
+    on.exit(close.connection(con))
+    
+    bytes <- if (col$what == "double") 8 else 4
+    
+    con <- file(col$file, open = "rb")
+    
+    l <- split(i, cumsum(c(TRUE, diff(i) != 1)))
+    l <- lapply(l, function(x) list(where=x[[1]], n=length(x)))
+    
+    out <- vector("list", length(l))
+    for (j in seq_along(l)) {
+      ## go to position in file
+      seek(con, where = (l[[j]]$where - 1) * bytes)
+      
+      out[[j]] <- readBin(con, what = col$what, n = l[[j]]$n)
+      
     }
-  )
-)
+    return(unlist(out, use.names = FALSE))
+  })
 
-bfdcol_factor <- setRefClass(
-  "bfdcol_factor",
-  fields = list(levels="integer", labels="character"),
-  contains = "bfdcol",
-  methods = list(
-    write = function(x) callSuper(as.integer(x)),
-    read = function(i) factor(callSuper(i), levels=levels, labels=labels),
-    append = function(x) callSuper(as.integer(x))
-  )
-)
+setMethod(
+  "Write",
+  c("bfdcol", "ANY"),
+  function(col, x) {
+    on.exit(close.connection(con))
+    con <- file(col$file, open = "wb")
+    writeBin(x, con, col$size)
+    col$n <- length(x)
+  })
 
+setMethod(
+  "Append",
+  c("bfdcol", "ANY"),
+  function(col, x) {
+    on.exit(close.connection(con))
+    con <- file(col$file, open = "ab")
+    writeBin(x, con, col$size)
+    col$n <- col$n + length(x)
+  })
+
+### Implement Append functions for when bfdcol and new data don't match
+### Need to widen the data to the new type
+### 1. Determine new type
+### 2. Open connection to existing location
+### 3. Read data in n bytes at a time
+### 4. Write it and then append it in the new format
+### 5. Append the new data
+
+bfdcol_numeric <- setRefClass("bfdcol_numeric", contains="bfdcol")
+bfdcol_integer <- setRefClass("bfdcol_integer", contains="bfdcol")
+bfdcol_logical <- setRefClass("bfdcol_logical", contains="bfdcol")
+bfdcol_character <- setRefClass("bfdcol_character", contains="bfdcol")
+bfdcol_factor <- setRefClass("bfdcol_factor",
+                             fields = list(levels="integer", labels="character"),
+                             contains="bfdcol")
+
+###### FACTOR COLUMN METHODS ######
+
+setMethod(
+  "Write",
+  c("bfdcol_factor", "factor"),
+  function(col, x) {
+    Write(col, as.integer(x))
+  })
+
+setMethod(
+  "Read",
+  c("bfdcol_factor", "numeric"),
+  function(col, i) {
+    factor(callNextMethod(), levels=col$levels, labels=col$labels)
+  })
+
+setMethod(
+  "Append",
+  c("bfdcol_factor", "factor"),
+  function(col, x) {
+    col$levels <- union(col$levels, seq_along(levels(x)))
+    col$labels <- union(col$labels, levels(x))
+    Append(col, match(x, col$labels))
+  })
 
 setGeneric("make_bfdcol", function(x, name, path, write=FALSE) standardGeneric("make_bfdcol"))
 

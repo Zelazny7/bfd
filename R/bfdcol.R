@@ -88,13 +88,14 @@ setMethod(
 ### 4. Write it and then append it in the new format
 ### 5. Append the new data
 
-bfdcol_numeric <- setRefClass("bfdcol_numeric", contains="bfdcol")
-bfdcol_integer <- setRefClass("bfdcol_integer", contains="bfdcol")
-bfdcol_logical <- setRefClass("bfdcol_logical", contains="bfdcol")
+### TODO:: Create initialize methods here!?
+bfdcol_numeric   <- setRefClass("bfdcol_numeric", contains="bfdcol")
+bfdcol_integer   <- setRefClass("bfdcol_integer", contains="bfdcol")
+bfdcol_logical   <- setRefClass("bfdcol_logical", contains="bfdcol")
 bfdcol_character <- setRefClass("bfdcol_character", contains="bfdcol")
-bfdcol_factor <- setRefClass("bfdcol_factor",
-                             fields = list(levels="integer", labels="character"),
-                             contains="bfdcol")
+bfdcol_factor    <- setRefClass("bfdcol_factor",
+                                fields = list(levels="integer", labels="character"),
+                                contains="bfdcol")
 
 ###### FACTOR COLUMN METHODS ######
 #' @export
@@ -124,85 +125,49 @@ setMethod(
   })
 
 
-setGeneric("make_bfdcol", function(x, name, path, write=FALSE) standardGeneric("make_bfdcol"))
+setGeneric("make_bfdcol", function(x, name, path) standardGeneric("make_bfdcol"))
 
 setMethod(
   "make_bfdcol",
   signature = c("integer"),
-  definition = function(x, name, path, write) {
-
-    col <- bfdcol(name = name,
-                   what = "integer",
-                   size = NA_integer_,
+  definition = function(x, name, path) {
+    bfdcol_integer(name = name, what = "integer", size = NA_integer_,
                    file  = tempfile("", path, ".bin"))
-
-    if (write) col$write(x)
-    col
   })
 
 setMethod(
   "make_bfdcol",
   signature = c("numeric"),
-  definition = function(x, name, path, write) {
-
-    col <- bfdcol(name  = name,
-                   what  = "double",
-                   size  = NA_real_,
+  definition = function(x, name, path) {
+    bfdcol_integer(name = name, what = "double", size = NA_real_,
                    file  = tempfile("", path, ".bin"))
-
-    if (write) col$write(x)
-    col
   })
-
 
 setMethod(
   "make_bfdcol",
   signature = c("logical"),
-  definition = function(x, name, path, write) {
-
-    col <- bfdcol(name = name,
-                   what = "logical",
-                   size = NA,
-                   file = tempfile("", path, ".bin"),
-                   lbls = levels(x))
-
-    if (write) col$write(x)
-    col
+  definition = function(x, name, path) {
+    bfdcol_logical(name = name, what = "logical", size = NA,
+                   file  = tempfile("", path, ".bin"))
   })
 
 setMethod(
   "make_bfdcol",
   signature = c("factor"),
-  definition = function(x, name, path, write) {
-
+  definition = function(x, name, path) {
     lvls <- levels(x)
-
-    col <- bfdcol_factor(name = name,
-                         what = "integer",
-                         size = NA_integer_,
-                         file  = tempfile("", path, ".bin"),
-                         levels = seq.int(length(lvls)),
-                         labels = lvls)
-
-    if (write) col$write(x)
-    col
+    bfdcol_factor(name = name, what = "integer", size = NA_integer_,
+                  file  = tempfile("", path, ".bin"),
+                  levels = seq.int(length(lvls)), labels = lvls)
   })
-
 
 setMethod(
   "make_bfdcol",
   signature = c("character"),
-  definition = function(x, name, path, write) {
-
-    col <- bfdcol(name = name,
-                   what = "character",
-                   size = NA_character_,
-                   file  = tempfile("", path, ".bin"))
-
-    if (write) col$write(x)
-    col
+  definition = function(x, name, path) {
+    bfdcol_character(name = name, what = "character", size = NA_character_,
+                     file  = tempfile("", path, ".bin"))
   })
-
 
 
 #' @export

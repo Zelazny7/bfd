@@ -13,9 +13,11 @@ bfd <- function(df, path, overwrite=FALSE, write=TRUE) {
 
   dir.create(path)
 
-  value <- mapply(make_bfdcol, df, names(df), MoreArgs = list(path=path, write=write), SIMPLIFY = FALSE)
+  value <- mapply(make_bfdcol, df, names(df), MoreArgs = list(path=path), SIMPLIFY = FALSE)
   attr(value, "class") <- "bfd"
   attr(value, "path") <- path
+  
+  if (write) mapply(Write, value, df, SIMPLIFY = F)
   
   value
 }
@@ -44,6 +46,8 @@ dim.bfd <- function(x) {
   as.integer(c(nr, length(x)))
 }
 
+
+## TODO: Make this work with names as well
 #' @export
 `[.bfd` <- function(x, i, j) {
 

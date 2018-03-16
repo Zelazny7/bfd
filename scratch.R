@@ -14,7 +14,7 @@ chunksize <- 10
   # .Names = c("Survived", "Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked"))
 
 f <- file("~/Documents/bigdata.csvh", open = "r")
-df <- bfd(start, path = "bigdata.bin", overwrite=TRUE, write=FALSE)
+df <- bfd(start, path = "bigdata.bin", overwrite=TRUE, write=TRUE)
 
 start <- read.table(f, header = TRUE, sep = ",", nrows = chunksize, col.names = names(cc))
 append.bfd(df, start)
